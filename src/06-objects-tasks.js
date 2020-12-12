@@ -20,9 +20,17 @@
  *    console.log(r.height);      // => 20
  *    console.log(r.getArea());   // => 200
  */
-function Rectangle(/* width, height */) {
-  throw new Error('Not implemented');
+// function Rectangle(/* width, height */) {
+//   throw new Error('Not implemented');
+// }
+
+function Rectangle(width, height) {
+  this.width = width;
+  this.height = height;
 }
+Rectangle.prototype.getArea = function getArea() {
+  return this.width * this.height;
+};
 
 
 /**
@@ -35,8 +43,8 @@ function Rectangle(/* width, height */) {
  *    [1,2,3]   =>  '[1,2,3]'
  *    { width: 10, height : 20 } => '{"height":10,"width":20}'
  */
-function getJSON(/* obj */) {
-  throw new Error('Not implemented');
+function getJSON(obj) {
+  return JSON.stringify(obj);
 }
 
 
@@ -51,11 +59,22 @@ function getJSON(/* obj */) {
  *    const r = fromJSON(Circle.prototype, '{"radius":10}');
  *
  */
-function fromJSON(/* proto, json */) {
-  throw new Error('Not implemented');
+function fromJSON(proto, json) {
+  const obj = JSON.parse(json);
+  const properties = {};
+  Object.getOwnPropertyNames(obj).forEach((key) => {
+    properties[key] = {
+      writable: true,
+      value: obj[key],
+      configurable: true,
+      enumerable: true,
+    };
+  });
+  return Object.create(proto, properties);
 }
 
 
+const CssSelectorBuilder = require('./CssSelectorBuilder');
 /**
  * Css selectors builder
  *
@@ -109,37 +128,41 @@ function fromJSON(/* proto, json */) {
  *
  *  For more examples see unit tests.
  */
+class CssSelectorCombiner extends CssSelectorBuilder {
+  constructor() {
+    super();
+    this.combitation = null;
+  }
 
-const cssSelectorBuilder = {
-  element(/* value */) {
-    throw new Error('Not implemented');
-  },
+  combine(selector1, combinator, selector2) {
+    this.combination = `${selector1.stringify()} ${combinator} ${selector2.stringify()}`;
+    return fromJSON(CssSelectorCombiner.prototype, JSON.stringify(this));
+  }
 
-  id(/* value */) {
-    throw new Error('Not implemented');
-  },
+  dispose() {
+    super.dispose();
+    this.valueOf();
+  }
 
-  class(/* value */) {
-    throw new Error('Not implemented');
-  },
+  valueOf() {
+    const obj = Object.create(CssSelectorBuilder.prototype);
+    this.element = obj.element;
+    this.id = obj.id;
+    this.class = obj.class;
+    this.attr = obj.attr;
+    this.pseudoClass = obj.pseudoClass;
+    this.pseudoElement = obj.pseudoElement;
+    return this;
+  }
 
-  attr(/* value */) {
-    throw new Error('Not implemented');
-  },
-
-  pseudoClass(/* value */) {
-    throw new Error('Not implemented');
-  },
-
-  pseudoElement(/* value */) {
-    throw new Error('Not implemented');
-  },
-
-  combine(/* selector1, combinator, selector2 */) {
-    throw new Error('Not implemented');
-  },
-};
-
+  stringify() {
+    // console.log(this);
+    this.combination = this.combination ? this.combination : '';
+    const string = super.stringify();
+    return string + this.combination;
+  }
+}
+const cssSelectorBuilder = new CssSelectorCombiner();
 
 module.exports = {
   Rectangle,
